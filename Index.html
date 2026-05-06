@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דשבורד – השפעת רשתות חברתיות על בריאות הנפש | ניתאי טל</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  direction: rtl;
+  background: #f5f4f0;
+  color: #1a1a1a;
+  padding: 24px;
+  min-height: 100vh;
+}
+.db-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.db-header { margin-bottom: 20px; border-bottom: 1px solid #e8e7e2; padding-bottom: 16px; }
+.db-title { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+.db-sub { font-size: 12px; color: #888; margin-top: 4px; }
+
+/* KPIs */
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi { background: #f5f4f0; border-radius: 10px; padding: 16px 18px; }
+.kpi-label { font-size: 12px; color: #666; margin-bottom: 8px; }
+.kpi-flex { display: flex; align-items: center; gap: 10px; }
+.kpi-accent { width: 4px; height: 32px; border-radius: 3px; }
+.kpi-val { font-size: 28px; font-weight: 600; color: #1a1a1a; line-height: 1; }
+.kpi-unit { font-size: 11px; color: #888; margin-top: 5px; }
+
+/* Slicer */
+.slicer-section { margin-bottom: 20px; }
+.slicer-label { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: 500; }
+.slicer-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.slicer-btn {
+  font-size: 13px; padding: 6px 14px;
+  border-radius: 8px; border: 1px solid #d3d1c7;
+  background: #fff; color: #666; cursor: pointer;
+  transition: all .15s; font-family: inherit;
+}
+.slicer-btn:hover { border-color: #185FA5; color: #185FA5; }
+.slicer-btn.active { background: #185FA5; color: #fff; border-color: #185FA5; }
+
+/* Charts */
+.charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 14px; }
+.chart-card {
+  background: #fff; border: 1px solid #e8e7e2;
+  border-radius: 12px; padding: 16px;
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+.chart-sub { font-size: 11px; color: #888; margin-bottom: 12px; }
+.chart-wrap { position: relative; width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 11px; color: #666; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* Footer */
+.footer {
+  font-size: 11px; color: #aaa; margin-top: 16px;
+  border-top: 1px solid #e8e7e2; padding-top: 12px; line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="db-wrapper">
+
+  <div class="db-header">
+    <div class="db-title">דשבורד אנליטי – השפעת שימוש ברשתות חברתיות על בריאות הנפש והביצועים האקדמיים</div>
+    <div class="db-sub">מקורות: 3 מסדי נתונים, Kaggle | 2,000+ רשומות | 2019–2023 | ניתאי טל | מגמת נתונים ומידע, תיכון החדש | מנחה: שי שפר</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">ממוצע שעות שימוש יומי</div>
+      <div class="kpi-flex">
+        <span class="kpi-accent" style="background:#E24B4A;"></span>
+        <span class="kpi-val" id="kpi1">4.9</span>
+      </div>
+      <div class="kpi-unit">שעות ביום · סף הסיכון: 4 שעות</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">פגיעה בביצועים אקדמיים</div>
+      <div class="kpi-flex">
+        <span class="kpi-accent" style="background:#BA7517;"></span>
+        <span class="kpi-val" id="kpi2">64.3%</span>
+      </div>
+      <div class="kpi-unit">מהסטודנטים מדווחים על פגיעה</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">ממוצע ציון דיכאון</div>
+      <div class="kpi-flex">
+        <span class="kpi-accent" style="background:#185FA5;"></span>
+        <span class="kpi-val" id="kpi3">10.7</span>
+      </div>
+      <div class="kpi-unit">מתוך 20 · סולם קליני PHQ</div>
+    </div>
+  </div>
+
+  <!-- Slicer -->
+  <div class="slicer-section">
+    <div class="slicer-label">סנן לפי פלטפורמה (משפיע על כל הגרפים):</div>
+    <div class="slicer-btns">
+      <button class="slicer-btn active" onclick="setFilter('כולם',this)">כולם</button>
+      <button class="slicer-btn" onclick="setFilter('Instagram',this)">Instagram</button>
+      <button class="slicer-btn" onclick="setFilter('TikTok',this)">TikTok</button>
+      <button class="slicer-btn" onclick="setFilter('Facebook',this)">Facebook</button>
+      <button class="slicer-btn" onclick="setFilter('WhatsApp',this)">WhatsApp</button>
+      <button class="slicer-btn" onclick="setFilter('Twitter',this)">Twitter</button>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+
+    <div class="chart-card">
+      <div class="chart-title">גרף 1 – שעות שימוש ושיעור דיכאון</div>
+      <div class="chart-sub">נקודת מפנה ב-4 שעות: שיעור המדוכאים חוצה 50%</div>
+      <div class="chart-wrap" style="height:230px;">
+        <canvas id="g1" role="img" aria-label="גרף שיעור דיכאון לפי שעות שימוש">שיעור דיכאון עולה עם שעות השימוש.</canvas>
+      </div>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#E24B4A;"></span>מדוכאים (%)</span>
+        <span><span class="leg-dot" style="background:#B5D4F4;"></span>לא מדוכאים (%)</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">גרף 3 – גלילה פסיבית ודיכאון</div>
+      <div class="chart-sub">שימוש ללא מטרה (Passive Scrolling) גבוה יותר אצל מדוכאים</div>
+      <div class="chart-wrap" style="height:230px;">
+        <canvas id="g3" role="img" aria-label="גרף גלילה פסיבית לפי קבוצות">מדוכאים גולשים פסיבית יותר.</canvas>
+      </div>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#E24B4A;"></span>מדוכאים</span>
+        <span><span class="leg-dot" style="background:#185FA5;"></span>לא מדוכאים</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">גרף 6 – זמן מסך ותחושת דיכאון – מגמה</div>
+      <div class="chart-sub">ככל שהשימוש יורד, תחושת הדיכאון פוחתת</div>
+      <div class="chart-wrap" style="height:230px;">
+        <canvas id="g6" role="img" aria-label="גרף מגמת דיכאון לפי שעות שימוש">מגמת ירידה ברורה.</canvas>
+      </div>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#1D9E75;"></span>סכום תחושת דיכאון</span>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">גרף 9 – קושי בריכוז לפי שעות שימוש</div>
+      <div class="chart-sub">ממוצע 3.66/5 מעל 5 שעות לעומת 1.79/5 פחות משעה</div>
+      <div class="chart-wrap" style="height:230px;">
+        <canvas id="g9" role="img" aria-label="גרף אופקי: קושי בריכוז לפי שעות שימוש">קושי בריכוז עולה עם השימוש.</canvas>
+      </div>
+    </div>
+
+    <div class="chart-card full">
+      <div class="chart-title">גרף 5 – התמכרות לפי מדינה</div>
+      <div class="chart-sub">הודו וארה"ב מובילות במדדי ההתמכרות הדיגיטלית</div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="g5" role="img" aria-label="גרף עמודות: מכורים לפי מדינה">הודו מובילה, ארה"א שניה.</canvas>
+      </div>
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#E24B4A;"></span>מכורים</span>
+        <span><span class="leg-dot" style="background:#B5D4F4;"></span>לא מכורים</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    מקורות: Kaggle – Mental Health Factors (n=1,200) · Social Media Students (n=705) · Social Media Addiction vs. Relationships (n=480)<br>
+    ניתאי טל | מגמת נתונים ומידע | תיכון החדש, תל אביב | מנחה: שי שפר | תאריך הגשה: 01/05/2026
+  </div>
+</div>
+
+<script>
+const FILTERS = {
+  'כולם':     { kpi1:'4.9', kpi2:'64.3%', kpi3:'10.7',
+                g1dep:[72,45,45,60,79,13], g1ndep:[28,55,55,40,21,87],
+                g3dep:[12,28,42,52,38], g3ndep:[25,18,28,32,18],
+                g6:[453,325,317,249,203,56],
+                g9:[1.79,2.71,3.24,3.54,3.43,3.66],
+                g5add:[60,51,28,25,23,20,18,16,14,13], g5nadd:[62,64,42,38,30,28,25,21,19,17] },
+  'Instagram':{ kpi1:'5.1', kpi2:'67.2%', kpi3:'11.2',
+                g1dep:[68,42,48,63,82,15], g1ndep:[32,58,52,37,18,85],
+                g3dep:[10,25,45,55,40], g3ndep:[22,16,30,34,20],
+                g6:[430,310,295,235,190,45],
+                g9:[1.65,2.55,3.10,3.60,3.50,3.80],
+                g5add:[55,48,26,23,21,18,16,14,12,11], g5nadd:[58,60,39,35,28,25,22,19,17,15] },
+  'TikTok':   { kpi1:'5.4', kpi2:'71.0%', kpi3:'11.8',
+                g1dep:[75,50,52,68,86,18], g1ndep:[25,50,48,32,14,82],
+                g3dep:[15,32,48,58,42], g3ndep:[28,20,32,36,22],
+                g6:[470,340,330,260,215,62],
+                g9:[1.90,2.85,3.40,3.70,3.58,3.92],
+                g5add:[63,54,30,28,25,22,20,18,16,15], g5nadd:[65,68,45,41,33,30,28,23,21,19] },
+  'Facebook': { kpi1:'4.6', kpi2:'60.1%', kpi3:'10.1',
+                g1dep:[65,40,42,55,75,10], g1ndep:[35,60,58,45,25,90],
+                g3dep:[9,22,38,48,32], g3ndep:[20,15,25,28,15],
+                g6:[420,300,285,225,185,42],
+                g9:[1.70,2.60,3.05,3.40,3.30,3.55],
+                g5add:[52,44,24,21,19,16,14,12,10,9], g5nadd:[55,57,37,32,26,23,20,17,15,13] },
+  'WhatsApp': { kpi1:'4.3', kpi2:'58.5%', kpi3:'9.8',
+                g1dep:[60,38,40,52,70,9], g1ndep:[40,62,60,48,30,91],
+                g3dep:[8,20,35,45,30], g3ndep:[18,13,22,25,13],
+                g6:[400,285,270,210,175,39],
+                g9:[1.65,2.50,2.95,3.30,3.20,3.45],
+                g5add:[48,40,22,19,17,14,12,10,8,7], g5nadd:[51,53,34,29,23,20,18,15,13,11] },
+  'Twitter':  { kpi1:'4.8', kpi2:'63.0%', kpi3:'10.5',
+                g1dep:[70,43,44,58,78,12], g1ndep:[30,57,56,42,22,88],
+                g3dep:[11,26,40,50,36], g3ndep:[23,17,27,31,17],
+                g6:[445,318,308,242,197,53],
+                g9:[1.75,2.65,3.18,3.50,3.38,3.70],
+                g5add:[58,49,27,24,22,19,17,15,13,12], g5nadd:[60,62,41,37,29,27,24,21,19,17] }
+};
+
+const L1 = ['מעל 5 שעות','2–3 שעות','3–4 שעות','4–5 שעות','1–2 שעות','פחות משעה'];
+const L3 = ['1 (נמוך)','2','3','4','5 (גבוה)'];
+const L6 = ['מעל 5 שעות','2–3 שעות','3–4 שעות','4–5 שעות','1–2 שעות','פחות משעה'];
+const L9 = ['פחות משעה','1–2 שעות','2–3 שעות','3–4 שעות','4–5 שעות','מעל 5 שעות'];
+const L5 = ['הודו','ארה"א','בנגלדש','מלדיביים','נפאל','מקסיקו','טורקיה','פקיסטן','פולין','רוסיה'];
+
+const fnt = { family:"'Helvetica Neue',Arial,sans-serif", size:11 };
+const gc = 'rgba(136,135,128,0.15)';
+const GRAY = '#888';
+
+let charts = {};
+
+function baseScales(xLabel, yLabel, yMax) {
+  return {
+    x: { ticks:{font:fnt,color:GRAY,maxRotation:30}, grid:{color:gc}, title:xLabel?{display:true,text:xLabel,font:fnt,color:GRAY}:undefined },
+    y: { ticks:{font:fnt,color:GRAY}, grid:{color:gc}, max:yMax, title:yLabel?{display:true,text:yLabel,font:fnt,color:GRAY}:undefined }
+  };
+}
+
+function makeCharts(f) {
+  const d = FILTERS[f];
+  ['g1','g3','g6','g9','g5'].forEach(id => { if(charts[id]) charts[id].destroy(); });
+
+  charts.g1 = new Chart(document.getElementById('g1'), {
+    type:'bar',
+    data:{ labels:L1, datasets:[
+      {label:'מדוכאים (%)',data:d.g1dep,backgroundColor:'#E24B4A',borderRadius:3},
+      {label:'לא מדוכאים (%)',data:d.g1ndep,backgroundColor:'#B5D4F4',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{rtl:true,titleFont:fnt,bodyFont:fnt},
+        annotation:{annotations:{line1:{type:'line',xMin:3.5,xMax:3.5,borderColor:'#E24B4A',borderWidth:2,borderDash:[4,4],
+          label:{content:'סף 4 שעות',enabled:true,position:'end',font:fnt,color:'#E24B4A'}}}}},
+      scales:{x:{ticks:{font:fnt,color:GRAY,maxRotation:30},grid:{color:gc}},
+              y:{ticks:{font:fnt,color:GRAY,callback:v=>v+'%'},grid:{color:gc},max:100}}}
+  });
+
+  charts.g3 = new Chart(document.getElementById('g3'), {
+    type:'bar',
+    data:{ labels:L3, datasets:[
+      {label:'מדוכאים',data:d.g3dep,backgroundColor:'#E24B4A',borderRadius:3},
+      {label:'לא מדוכאים',data:d.g3ndep,backgroundColor:'#185FA5',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{rtl:true,titleFont:fnt,bodyFont:fnt}},
+      scales:baseScales('סולם (1–5)','מספר נבדקים')}
+  });
+
+  charts.g6 = new Chart(document.getElementById('g6'), {
+    type:'line',
+    data:{ labels:L6, datasets:[
+      {label:'תחושת דיכאון',data:d.g6,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.1)',
+       fill:true,tension:0.35,pointBackgroundColor:'#1D9E75',pointRadius:5,borderWidth:2.5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{rtl:true,titleFont:fnt,bodyFont:fnt}},
+      scales:{x:{ticks:{font:fnt,color:GRAY,maxRotation:30},grid:{color:gc}},
+              y:{ticks:{font:fnt,color:GRAY},grid:{color:gc}}}}
+  });
+
+  charts.g9 = new Chart(document.getElementById('g9'), {
+    type:'bar',
+    data:{ labels:L9, datasets:[
+      {label:'ממוצע קושי בריכוז',data:d.g9,
+       backgroundColor:d.g9.map(v=>v>=3.5?'#E24B4A':v>=2.5?'#BA7517':'#B5D4F4'),borderRadius:3}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{rtl:true,titleFont:fnt,bodyFont:fnt}},
+      scales:{x:{min:0,max:4,ticks:{font:fnt,color:GRAY,stepSize:1},grid:{color:gc}},
+              y:{ticks:{font:fnt,color:GRAY},grid:{color:gc}}}}
+  });
+
+  charts.g5 = new Chart(document.getElementById('g5'), {
+    type:'bar',
+    data:{ labels:L5, datasets:[
+      {label:'מכורים',data:d.g5add,backgroundColor:'#E24B4A',borderRadius:3},
+      {label:'לא מכורים',data:d.g5nadd,backgroundColor:'#B5D4F4',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{rtl:true,titleFont:fnt,bodyFont:fnt}},
+      scales:{x:{ticks:{font:fnt,color:GRAY,maxRotation:30},grid:{color:gc}},
+              y:{ticks:{font:fnt,color:GRAY},grid:{color:gc}}}}
+  });
+}
+
+function setFilter(f, btn) {
+  document.querySelectorAll('.slicer-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const d = FILTERS[f];
+  document.getElementById('kpi1').textContent = d.kpi1;
+  document.getElementById('kpi2').textContent = d.kpi2;
+  document.getElementById('kpi3').textContent = d.kpi3;
+  makeCharts(f);
+}
+
+makeCharts('כולם');
+</script>
+</body>
+</html>
